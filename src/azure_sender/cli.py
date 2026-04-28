@@ -207,4 +207,7 @@ def iothub_service_send_file(ctx: click.Context, file: Path, device_id: Optional
     with IoTHubServiceSender(settings) as s:
         sent = s.send_batch(messages)
     click.echo(f"已发送 {sent} 条消息")
+
+
+if __name__ == "__main__":  # pragma: no cover
     cli()
