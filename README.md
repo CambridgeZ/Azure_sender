@@ -1,15 +1,17 @@
 # azure-sender
 
-向 **Azure Event Hub** 与 **Azure IoT Hub** 发送数据的 Python 项目，支持：
+[中文版 README](README.zh-CN.md)
 
-- ✅ Event Hub：Connection String 与 Azure AD（`DefaultAzureCredential`）两种认证
-- ✅ IoT Hub：Device Connection String 或 SAS Token（库内置生成）
-- ✅ 同步 + 异步（`asyncio`）API
-- ✅ 单条与批量发送（Event Hub 自动按最大批大小分批）
-- ✅ CLI 命令行工具 `azure-sender`
-- ✅ pytest 单元测试
+A Python project for sending data to **Azure Event Hub** and **Azure IoT Hub**, featuring:
 
-## 目录结构
+- ✅ Event Hub: authentication via Connection String or Azure AD (`DefaultAzureCredential`)
+- ✅ IoT Hub: Device Connection String or SAS Token (built-in generation)
+- ✅ Synchronous and asynchronous (`asyncio`) APIs
+- ✅ Single-message and batch sending (Event Hub auto-splits batches by max size)
+- ✅ `azure-sender` command-line tool
+- ✅ pytest unit tests
+
+## Project Structure
 
 ```
 azure-sender/
@@ -17,10 +19,10 @@ azure-sender/
 ├─ .env.example
 ├─ src/azure_sender/
 │  ├─ __init__.py
-│  ├─ config.py            # 环境配置与校验
+│  ├─ config.py            # Environment configuration & validation
 │  ├─ event_hub_sender.py  # EventHubSender / AsyncEventHubSender
 │  ├─ iot_hub_sender.py    # IoTHubSender / AsyncIoTHubSender
-│  ├─ sas.py               # IoT Hub SAS Token 生成
+│  ├─ sas.py               # IoT Hub SAS Token generation
 │  ├─ logging_utils.py
 │  └─ cli.py               # azure-sender CLI
 ├─ examples/
@@ -34,9 +36,9 @@ azure-sender/
    └─ test_iot_hub_sender.py
 ```
 
-## 安装
+## Installation
 
-推荐使用虚拟环境：
+A virtual environment is recommended:
 
 ```bash
 cd /Users/mac/azure-sender
@@ -45,64 +47,64 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-## 配置
+## Configuration
 
-复制示例文件并填入你的真实值：
+Copy the example file and fill in your real values:
 
 ```bash
 cp .env.example .env
 ```
 
-主要变量：
+Main variables:
 
-| 变量 | 说明 |
-| ---- | ---- |
-| `EVENT_HUB_CONNECTION_STR` | Event Hub 命名空间或实体连接字符串 |
-| `EVENT_HUB_NAME` | Event Hub 名称（连接串无 `EntityPath` 时必填） |
-| `EVENT_HUB_FULLY_QUALIFIED_NAMESPACE` | `<namespace>.servicebus.windows.net`，AAD 方式必填 |
-| `USE_AAD_FOR_EVENT_HUB` | `true` 时使用 `DefaultAzureCredential` |
-| `IOT_HUB_DEVICE_CONNECTION_STR` | 设备连接字符串（推荐） |
-| `IOT_HUB_HOSTNAME` / `IOT_HUB_DEVICE_ID` / `IOT_HUB_DEVICE_KEY` | 显式 SAS 模式三件套 |
-| `IOT_HUB_SAS_TTL` | SAS Token 有效期（秒），默认 3600 |
-| `IOT_HUB_SERVICE_CONNECTION_STR` | IoT Hub 服务级连接字符串（含 `SharedAccessKeyName`），C2D 模式必填 |
-| `IOT_HUB_TARGET_DEVICE_ID` | C2D 消息的目标设备 ID |
+| Variable | Description |
+| -------- | ----------- |
+| `EVENT_HUB_CONNECTION_STR` | Event Hub namespace or entity connection string |
+| `EVENT_HUB_NAME` | Event Hub name (required when the connection string has no `EntityPath`) |
+| `EVENT_HUB_FULLY_QUALIFIED_NAMESPACE` | `<namespace>.servicebus.windows.net`, required for AAD |
+| `USE_AAD_FOR_EVENT_HUB` | Set to `true` to use `DefaultAzureCredential` |
+| `IOT_HUB_DEVICE_CONNECTION_STR` | Device connection string (recommended) |
+| `IOT_HUB_HOSTNAME` / `IOT_HUB_DEVICE_ID` / `IOT_HUB_DEVICE_KEY` | Trio for explicit SAS mode |
+| `IOT_HUB_SAS_TTL` | SAS token TTL in seconds, default `3600` |
+| `IOT_HUB_SERVICE_CONNECTION_STR` | IoT Hub service-level connection string (with `SharedAccessKeyName`); required for C2D |
+| `IOT_HUB_TARGET_DEVICE_ID` | Target device ID for C2D messages |
 
-> 使用 AAD 时，请先 `az login`，并确保账户对 Event Hub 拥有 **Azure Event Hubs Data Sender** 角色。
+> When using AAD, run `az login` first and ensure your account has the **Azure Event Hubs Data Sender** role on the Event Hub.
 
-## CLI 用法
+## CLI Usage
 
 ```bash
-# Event Hub —— 单条
+# Event Hub — single message
 azure-sender eventhub send '{"temperature": 22.5}' --partition-key sensor-1
 
-# Event Hub —— 批量（每行一条消息）
+# Event Hub — batch (one message per line)
 azure-sender eventhub send-file ./messages.jsonl --asyncio
 
-# IoT Hub（设备端）—— 单条
+# IoT Hub (device side) — single message
 azure-sender iothub send '{"temperature": 22.5}'
 
-# IoT Hub（设备端）—— 批量
+# IoT Hub (device side) — batch
 azure-sender iothub send-file ./messages.jsonl --asyncio
 
-# IoT Hub（服务端 C2D）—— 单条
+# IoT Hub (service side, C2D) — single message
 azure-sender iothub service-send '{"temperature": 22.5}'
 
-# IoT Hub（服务端 C2D）—— 指定目标设备
+# IoT Hub (service side, C2D) — explicit target device
 azure-sender iothub service-send '{"temperature": 22.5}' --device-id my-device-1
 
-# IoT Hub（服务端 C2D）—— 批量
+# IoT Hub (service side, C2D) — batch
 azure-sender iothub service-send-file ./messages.jsonl
 ```
 
-如需自定义 `.env` 路径：
+To use a custom `.env` path:
 
 ```bash
 azure-sender --env-file ./prod.env eventhub send "ping"
 ```
 
-## 编程接口
+## Programming Interface
 
-### Event Hub（同步）
+### Event Hub (sync)
 
 ```python
 from azure_sender import EventHubSender
@@ -112,7 +114,7 @@ with EventHubSender() as sender:
     sender.send_batch([{"i": i} for i in range(1000)])
 ```
 
-### Event Hub（异步）
+### Event Hub (async)
 
 ```python
 import asyncio
@@ -125,7 +127,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### IoT Hub（设备端同步）
+### IoT Hub (device, sync)
 
 ```python
 from azure_sender import IoTHubSender
@@ -134,7 +136,7 @@ with IoTHubSender() as sender:
     sender.send({"temperature": 22.5})
 ```
 
-### IoT Hub（设备端异步）
+### IoT Hub (device, async)
 
 ```python
 import asyncio
@@ -148,7 +150,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### IoT Hub（服务端 C2D）
+### IoT Hub (service, C2D)
 
 ```python
 from azure_sender import IoTHubServiceSender
@@ -158,27 +160,27 @@ with IoTHubServiceSender() as sender:
     sender.send_batch([{"i": i} for i in range(10)])
 ```
 
-也可以在构造时指定目标设备 ID（覆盖 `.env` 配置）：
+You can also specify the target device ID at construction time (overriding `.env`):
 
 ```python
 with IoTHubServiceSender(device_id="my-device-1") as sender:
     sender.send("hello from cloud")
 ```
 
-## 测试
+## Testing
 
 ```bash
 pytest -v
 ```
 
-单元测试通过 mock 替换 Azure 客户端，**无需真实凭据**即可运行。
+Unit tests mock out the Azure clients, so **no real credentials** are required to run them.
 
-## 常见问题
+## FAQ
 
-- **`ValueError: 必须设置 EVENT_HUB_CONNECTION_STR 或启用 AAD`**：检查 `.env` 是否被加载、变量是否正确。
-- **AAD 认证失败**：确认已 `az login` 且账户角色为 *Azure Event Hubs Data Sender*。
-- **IoT Hub 连接断开**：SAS Token 过期，重新创建 sender 或调大 `IOT_HUB_SAS_TTL`。
-- **Event Hub 单条消息超过 batch 上限**：`send_batch` 会按上限自动分批；若单条消息本身超限会抛 `ValueError`，需拆分业务数据。
+- **`ValueError: EVENT_HUB_CONNECTION_STR must be set or AAD must be enabled`**: check that `.env` is loaded and the variables are correct.
+- **AAD authentication fails**: ensure you have run `az login` and your account holds the *Azure Event Hubs Data Sender* role.
+- **IoT Hub connection drops**: the SAS token has expired — recreate the sender or increase `IOT_HUB_SAS_TTL`.
+- **Single Event Hub message exceeds the batch limit**: `send_batch` automatically splits batches by the limit; a single oversized message will raise `ValueError` and must be split at the application level.
 
 ## License
 
