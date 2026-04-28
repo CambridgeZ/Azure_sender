@@ -64,6 +64,8 @@ cp .env.example .env
 | `IOT_HUB_DEVICE_CONNECTION_STR` | 设备连接字符串（推荐） |
 | `IOT_HUB_HOSTNAME` / `IOT_HUB_DEVICE_ID` / `IOT_HUB_DEVICE_KEY` | 显式 SAS 模式三件套 |
 | `IOT_HUB_SAS_TTL` | SAS Token 有效期（秒），默认 3600 |
+| `IOT_HUB_SERVICE_CONNECTION_STR` | IoT Hub 服务级连接字符串（含 `SharedAccessKeyName`），C2D 模式必填 |
+| `IOT_HUB_TARGET_DEVICE_ID` | C2D 消息的目标设备 ID |
 
 > 使用 AAD 时，请先 `az login`，并确保账户对 Event Hub 拥有 **Azure Event Hubs Data Sender** 角色。
 
@@ -76,11 +78,20 @@ azure-sender eventhub send '{"temperature": 22.5}' --partition-key sensor-1
 # Event Hub —— 批量（每行一条消息）
 azure-sender eventhub send-file ./messages.jsonl --asyncio
 
-# IoT Hub —— 单条
+# IoT Hub（设备端）—— 单条
 azure-sender iothub send '{"temperature": 22.5}'
 
-# IoT Hub —— 批量
+# IoT Hub（设备端）—— 批量
 azure-sender iothub send-file ./messages.jsonl --asyncio
+
+# IoT Hub（服务端 C2D）—— 单条
+azure-sender iothub service-send '{"temperature": 22.5}'
+
+# IoT Hub（服务端 C2D）—— 指定目标设备
+azure-sender iothub service-send '{"temperature": 22.5}' --device-id my-device-1
+
+# IoT Hub（服务端 C2D）—— 批量
+azure-sender iothub service-send-file ./messages.jsonl
 ```
 
 如需自定义 `.env` 路径：
@@ -114,7 +125,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### IoT Hub（同步）
+### IoT Hub（设备端同步）
 
 ```python
 from azure_sender import IoTHubSender
@@ -123,7 +134,7 @@ with IoTHubSender() as sender:
     sender.send({"temperature": 22.5})
 ```
 
-### IoT Hub（异步）
+### IoT Hub（设备端异步）
 
 ```python
 import asyncio
@@ -135,6 +146,23 @@ async def main():
             await sender.send({"i": i})
 
 asyncio.run(main())
+```
+
+### IoT Hub（服务端 C2D）
+
+```python
+from azure_sender import IoTHubServiceSender
+
+with IoTHubServiceSender() as sender:
+    sender.send({"temperature": 22.5})
+    sender.send_batch([{"i": i} for i in range(10)])
+```
+
+也可以在构造时指定目标设备 ID（覆盖 `.env` 配置）：
+
+```python
+with IoTHubServiceSender(device_id="my-device-1") as sender:
+    sender.send("hello from cloud")
 ```
 
 ## 测试
