@@ -3,6 +3,7 @@
 from .config import Settings
 from .event_hub_sender import EventHubSender, AsyncEventHubSender
 from .iot_hub_sender import IoTHubSender, AsyncIoTHubSender
+from .iot_hub_service_sender import IoTHubServiceSender
 
 __all__ = [
     "Settings",
@@ -10,4 +11,5 @@ __all__ = [
     "AsyncEventHubSender",
     "IoTHubSender",
     "AsyncIoTHubSender",
+    "IoTHubServiceSender",
 ]

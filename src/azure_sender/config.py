@@ -25,12 +25,16 @@ class Settings:
     event_hub_fully_qualified_namespace: Optional[str] = None
     use_aad_for_event_hub: bool = False
 
-    # IoT Hub
+    # IoT Hub (设备端)
     iot_hub_device_connection_str: Optional[str] = None
     iot_hub_hostname: Optional[str] = None
     iot_hub_device_id: Optional[str] = None
     iot_hub_device_key: Optional[str] = None
     iot_hub_sas_ttl: int = 3600
+
+    # IoT Hub (服务端 C2D)
+    iot_hub_service_connection_str: Optional[str] = None
+    iot_hub_target_device_id: Optional[str] = None
 
     @classmethod
     def from_env(cls, dotenv_path: Optional[str] = None) -> "Settings":
@@ -47,6 +51,8 @@ class Settings:
             iot_hub_device_id=os.getenv("IOT_HUB_DEVICE_ID"),
             iot_hub_device_key=os.getenv("IOT_HUB_DEVICE_KEY"),
             iot_hub_sas_ttl=int(os.getenv("IOT_HUB_SAS_TTL", "3600")),
+            iot_hub_service_connection_str=os.getenv("IOT_HUB_SERVICE_CONNECTION_STR"),
+            iot_hub_target_device_id=os.getenv("IOT_HUB_TARGET_DEVICE_ID"),
         )
 
     # ---------- 校验 ----------
@@ -81,3 +87,9 @@ class Settings:
             raise ValueError(
                 "IoT Hub 配置不完整，缺少: " + ", ".join(missing)
             )
+
+    def validate_iot_hub_service(self) -> None:
+        if not self.iot_hub_service_connection_str:
+            raise ValueError("必须设置 IOT_HUB_SERVICE_CONNECTION_STR")
+        if not self.iot_hub_target_device_id:
+            raise ValueError("必须设置 IOT_HUB_TARGET_DEVICE_ID（目标设备 ID）")
